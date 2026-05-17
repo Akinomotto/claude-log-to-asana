@@ -92,16 +92,12 @@ Para cada proyecto resuelto:
 
 ### Título
 
-Patrón: `<verbo + objeto> · <duración>`. El verbo describe la acción principal, el objeto identifica el output. La duración va al final separada por `·`.
+Patrón: `<verbo + objeto>`. El verbo describe la acción principal, el objeto identifica el output. **No incluir duración en el título** — ya va en el custom field `Actual time` y, opcionalmente, en la descripción.
 
 Ejemplos genéricos:
-- `Auditar website de cliente · 45min`
-- `Crear spec de integración · 1h20`
-- `Refactorizar workflow n8n · 30min`
-
-Formato de duración:
-- `< 1h` → `XXmin` (ej.: `45min`)
-- `≥ 1h` → `XhYY` (ej.: `1h20`, `2h05`)
+- `Auditar website de cliente`
+- `Crear spec de integración`
+- `Refactorizar workflow n8n`
 
 ### Descripción (campo `notes`)
 
@@ -145,9 +141,12 @@ Al llamar `asana_create_task`:
 - `assignee`: `me` (o el gid del usuario actual).
 - `start_at`: timestamp ISO 8601 del inicio de la sesión (UTC).
 - `due_at`: timestamp ISO 8601 del momento de carga de la tarea (UTC).
-- `completed`:
-  - **Modo interactivo:** preguntá al usuario en el prompt de confirmación si la tarea está completada (`¿completada? [s/N]` adicional al confirm normal). Si responde `s` → `true`; si `N` o sin respuesta → `false`.
-  - **Modo `--auto` y `--auto-with-confirm-timeout`:** asumí `completed: true` (la routine/sesión cerró exitosamente). Excepción: si se detecta que quedaron TODOs pendientes, tests fallando o estado BLOCKED → `false`.
+- `completed`: inferí del estado final de la sesión.
+  - **`true` (completada)** si: la sesión cerró sin errores, sin TODOs pendientes explícitos, sin tests fallando, sin estado BLOCKED, sin tool calls fallidas en los últimos pasos significativos. Es decir, el trabajo se terminó.
+  - **`false` (en progreso/trunca)** si: hubo errores no resueltos, quedó algo a medias (TODO pendiente, retry pendiente, componente sin terminar), la sesión cortó por timeout/interrupción, o estás reportando algo que el usuario tiene que retomar.
+  - **Modo interactivo:** además de aplicar la heurística, preguntá al usuario `¿completada? [Y/n]` con `Y` por default (inferencia) para que pueda corregir.
+  - **Modo `--auto` / `--auto-with-confirm-timeout`:** aplicá la heurística sin preguntar.
+  - **Importante:** cargá la tarea siempre, incluso si quedó trunca — el valor de `completed` refleja el estado, pero la tarea queda registrada.
 - `tags`: aplicar el tag `Claude-Code` (variantes aceptadas: `claude-code`, `Claude-Code`). El MCP de Asana **no expone** una tool para crear tags ni para asignar tags a tareas existentes. Estrategia:
   1. Buscar el tag con `asana_typeahead_search(resource_type="tag", query="claude")`. Si existe, capturar el gid.
   2. Asignarlo via API REST directa: `POST https://app.asana.com/api/1.0/tasks/{task_gid}/addTag` con body `{"data":{"tag":"<tag_gid>"}}`. Usar el PAT del archivo `~/.claude/secrets/asana-pat` (ver §Operaciones avanzadas vía PAT).
