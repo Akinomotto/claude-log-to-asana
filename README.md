@@ -61,13 +61,13 @@ Para que la skill se invoque automáticamente al cerrar cada sesión de Claude C
 
 El hook tiene loop-guard (marker en `/tmp/.log-to-asana-fired-<session_id>`) para no dispararse infinitamente.
 
-### Claude Cowork — Global Instructions
+### Claude Cowork — instrucción condensada (no soporta plugins custom)
 
-Pegá este bloque en `Settings → Cowork → Edit Global Instructions` (una sola vez para todo el workspace):
+Cowork desktop no carga marketplaces personalizados de GitHub. Para que el comportamiento de la skill funcione en Cowork, hay que embeber las instrucciones directamente en el prompt del workspace.
 
-> **Al finalizar cualquier scheduled task de este workspace, invocá el skill `log-to-asana` en modo `--auto` pasándole como contexto el nombre de la scheduled task. La skill detectará si hubo entregables productivos (archivos creados, páginas Notion, eventos de Calendar, workflows n8n, etc.) y registrará el trabajo en Asana automáticamente en el proyecto correspondiente. Si no hubo entregables (la sesión fue solo lectura/búsqueda/conversación), no hará nada.**
+Ver `plugins/log-to-asana/skills/log-to-asana/cowork-condensed-instruction.md` — contiene un bloque listo para pegar en `Settings → Cowork → Edit Global Instructions` o en Project Instructions específicas.
 
-Para activarlo solo en algunos Projects internos de Cowork (no en todo el workspace), pegá el mismo bloque en las Project Instructions de los proyectos elegidos.
+La versión condensada (~300 palabras, ~600 tokens) cubre detección de entregables, ruteo via typeahead con fallback a Inbox Claude, y creación de tarea con campos y custom fields. Pierde respecto al plugin: mapping local con reglas custom, subtareas inteligentes, tag automático (el MCP no expone asignación de tags).
 
 ### Claude Chat (claude.ai)
 
