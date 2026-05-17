@@ -1,0 +1,12 @@
+{
+  "name": "log-to-asana",
+  "version": "0.1.0",
+  "description": "Logs work done in Claude (Code, Cowork, Chat) as trackable tasks in Asana. Detects deliverables, routes to the right project, fills custom fields (Estimated/Actual time), and supports interactive confirmation or fully automatic mode.",
+  "category": "productivity",
+  "homepage": "https://github.com/Akinomotto/claude-log-to-asana",
+  "author": {
+    "name": "Akira Zabala",
+    "url": "https://github.com/Akinomotto"
+  },
+  "license": "MIT"
+}
