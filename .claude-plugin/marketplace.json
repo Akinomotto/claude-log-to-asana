@@ -8,7 +8,7 @@
     {
       "name": "log-to-asana",
       "description": "Logs Claude sessions as trackable tasks in Asana with smart project routing.",
-      "source": "./",
+      "source": "./plugins/log-to-asana",
       "homepage": "https://github.com/Akinomotto/claude-log-to-asana"
     }
   ]
