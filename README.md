@@ -105,7 +105,25 @@ Si la skill no puede resolver un proyecto, crea (o usa si ya existe) un proyecto
 
 ## Custom fields opcionales
 
-Si tu workspace tiene los custom fields `Estimated time` / `Actual time` (en/es: `Tiempo estimado` / `Tiempo real`) asociados al proyecto destino, la skill los pobla automáticamente en minutos. `Estimated time` es built-in de Asana en todos los proyectos; `Actual time` se asocia manualmente por proyecto (Asana no permite hacerlo via API MCP).
+Si tu workspace tiene los custom fields `Estimated time` / `Actual time` (en/es: `Tiempo estimado` / `Tiempo real`) asociados al proyecto destino, la skill los pobla automáticamente en minutos. `Estimated time` es built-in de Asana en todos los proyectos; `Actual time` se asocia manualmente por proyecto (la MCP no permite hacerlo; pero ver §PAT abajo para bootstrap masivo).
+
+## PAT opcional (acceso avanzado a Asana)
+
+El MCP de Asana cubre la mayoría de operaciones pero no todas: por ejemplo, **agregar tags a tareas existentes**, **asociar custom fields a proyectos**, o **crear tags nuevos** requieren llamadas REST directas.
+
+Para habilitarlas, generá un Personal Access Token en https://app.asana.com/0/my-apps y guardálo así:
+
+```bash
+mkdir -p ~/.claude/secrets && chmod 700 ~/.claude/secrets
+echo -n "tu-pat-acá" > ~/.claude/secrets/asana-pat
+chmod 600 ~/.claude/secrets/asana-pat
+```
+
+La skill detecta el archivo automáticamente y lo usa para esas operaciones. Sin el archivo, la skill omite silenciosamente esas operaciones (no falla). Si revocás el PAT, las operaciones que lo requieran van a fallar — generá uno nuevo y reemplazá el contenido del archivo.
+
+**Casos resueltos con PAT:**
+- Aplicación automática del tag `Claude-Code` a cada tarea creada.
+- Bootstrap del custom field `Actual time` en todos los proyectos de un workspace (one-liner script en el repo).
 
 ## Licencia
 

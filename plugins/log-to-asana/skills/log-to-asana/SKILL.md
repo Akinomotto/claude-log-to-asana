@@ -148,7 +148,10 @@ Al llamar `asana_create_task`:
 - `completed`:
   - **Modo interactivo:** preguntá al usuario en el prompt de confirmación si la tarea está completada (`¿completada? [s/N]` adicional al confirm normal). Si responde `s` → `true`; si `N` o sin respuesta → `false`.
   - **Modo `--auto` y `--auto-with-confirm-timeout`:** asumí `completed: true` (la routine/sesión cerró exitosamente). Excepción: si se detecta que quedaron TODOs pendientes, tests fallando o estado BLOCKED → `false`.
-- `tags`: incluí el tag `claude-code`. Si no existe en el workspace, creálo primero y reusá el gid.
+- `tags`: aplicar el tag `Claude-Code` (variantes aceptadas: `claude-code`, `Claude-Code`). El MCP de Asana **no expone** una tool para crear tags ni para asignar tags a tareas existentes. Estrategia:
+  1. Buscar el tag con `asana_typeahead_search(resource_type="tag", query="claude")`. Si existe, capturar el gid.
+  2. Asignarlo via API REST directa: `POST https://app.asana.com/api/1.0/tasks/{task_gid}/addTag` con body `{"data":{"tag":"<tag_gid>"}}`. Usar el PAT del archivo `~/.claude/secrets/asana-pat` (ver §Operaciones avanzadas vía PAT).
+  3. Si el tag no existe y no podés crearlo via API, omitilo silenciosamente y avisá al usuario una vez por sesión que conviene crearlo manualmente en Asana.
 - `custom_fields`: ver §Custom fields opcionales.
 
 ### Custom fields opcionales
@@ -227,6 +230,36 @@ Formato del log (`~/.claude/logs/asana-sync.log`, solo Claude Code):
   Detalle: <stack o mensaje del MCP>
 ---
 ```
+
+## Operaciones avanzadas vía PAT
+
+La MCP de Asana no expone todas las operaciones de la API REST. Para casos como:
+
+- Asociar custom fields a proyectos (`POST /projects/{gid}/addCustomFieldSetting`).
+- Agregar tags a tareas existentes (`POST /tasks/{gid}/addTag`).
+- Crear tags nuevos (`POST /tags`).
+- Cualquier otro endpoint REST de Asana no expuesto por la MCP.
+
+Si el usuario configuró un Personal Access Token en `~/.claude/secrets/asana-pat` (archivo de una línea con el token, permisos 600), podés usarlo para llamadas directas a la API:
+
+```bash
+ASANA_PAT=$(cat ~/.claude/secrets/asana-pat)
+curl -X POST \
+  -H "Authorization: Bearer $ASANA_PAT" \
+  -H "Content-Type: application/json" \
+  -d '{"data":{"key":"value"}}' \
+  "https://app.asana.com/api/1.0/<endpoint>"
+```
+
+**Reglas:**
+- Antes de usar el PAT, **siempre intentá primero la MCP**. El PAT es fallback para lo que la MCP no expone.
+- Nunca expongas el contenido del PAT en mensajes al usuario, en logs, o en commits.
+- Si el archivo no existe, omitir silenciosamente la operación que lo requiere (el tag, la asociación, etc.) y continuar — no es bloqueante.
+- Si una llamada con PAT devuelve 401/403, avisá al usuario que probablemente el token fue revocado.
+
+Casos de uso típicos resueltos con PAT en esta skill:
+- Asignar el tag `Claude-Code` a tareas recién creadas (la MCP no lo soporta).
+- Bootstrap de custom fields como `Actual time` en proyectos nuevos del workspace.
 
 ## Documentación adicional
 
